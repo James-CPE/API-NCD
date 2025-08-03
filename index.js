@@ -21,14 +21,10 @@ const pool = mysql.createPool({
 // Middleware สำหรับตรวจสอบ API Key (สำคัญมาก!)
 const checkApiKey = (req, res, next) => {
   const apiKey = req.header('api-key');
-    console.log(apiKey);
-    console.log(process.env.API_KEY)
 
   if (apiKey && apiKey === process.env.API_KEY) {
     next(); // ผ่าน
   } else {
-    console.log(apiKey);
-    console.log(process.env.API_KEY)
     res.status(401).json({ error: 'Unauthorized: Invalid API Key' });
   }
 };
