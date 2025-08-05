@@ -38,6 +38,34 @@ app.get('/', async (req, res) => {
 })
 
 // --- CRUD Endpoints ---
+// POST /login
+app.post('/api/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    const [rows] = await pool.query(
+      'SELECT * FROM users WHERE username = ? AND password = ?',
+      [username, password]
+    );
+
+    if (rows.length > 0) {
+      const user = rows[0];
+      delete user.password; // ลบรหัสผ่านออกจาก object ที่จะส่งกลับ
+      res.json({ status: 'success', data: user });
+    } else {
+      res.status(401).json({ status: 'error', message: 'Invalid username or password' });
+    }
+
+  } catch (err) {
+    console.error('Login Error:', err);
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
 // GET /users
 app.get('/users', async (req, res) => {
   try {
