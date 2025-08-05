@@ -39,7 +39,7 @@ app.get('/', async (req, res) => {
 
 // --- CRUD Endpoints ---
 // POST /login
-app.post('/api/login', async (req, res) => {
+app.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 

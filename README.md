@@ -7,19 +7,19 @@
 Direct to directory project
 
 ```bash
-  cd /var/www/API-NCD
+cd /var/www/api/API-NCD
 ```
 
 Pull lastest version code from github
 
 ```bash
-  git pull origin main
+git pull origin main
 ```
 
 Restart application with PM2
 
 ```bash
-  pm2 restart api-ncd
+pm2 restart api-ncd
 ```
 
 ## How to see log API
@@ -27,17 +27,17 @@ Restart application with PM2
 Log API (Node.js/PM2)
 
 ```bash
-  pm2 logs api-ncd --lines 50
+pm2 logs api-ncd --lines 50
 ```
 
 Log Apache
 
 ```bash
-    sudo tail -f /var/log/httpd/access_log
+sudo tail -f /var/log/httpd/access_log
 ```
 
 Log error Apache
 ```bash
-    sudo tail -f /var/log/httpd/error_log
+sudo tail -f /var/log/httpd/error_log
 ```
 
