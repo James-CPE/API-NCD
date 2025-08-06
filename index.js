@@ -69,7 +69,7 @@ app.post('/login', async (req, res) => {
 // GET /users
 app.get('/users', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM user_ncd');
+    const [rows] = await pool.query('SELECT * FROM t_users');
     res.json({ status: 'success', data: rows });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
@@ -81,7 +81,7 @@ app.get('/person', async (req, res) => {
   try {
     // ดึงค่า username จาก query string ของ URL
     const { username } = req.query;
-    let sqlQuery = 'SELECT * FROM person';
+    let sqlQuery = 'SELECT * FROM t_person';
     const params = [];
     if (username && username.toLowerCase() !== 'admin') {
       sqlQuery += ' WHERE username = ?';
@@ -96,6 +96,26 @@ app.get('/person', async (req, res) => {
     res.status(500).json({ status: 'error', message: err.message });
   }
 });
+
+// GET /hospital data
+app.get('/hospdata', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM t_hospdata');
+    res.json({ status: 'success', data: rows });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+}) 
+
+// GET /dashboard data
+app.get('/dashboard', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM t_dashboard');
+    res.json({ status: 'success', data: rows });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+})
 
 const PORT = process.env.API_PORT || 3000;
 app.listen(PORT, () => {
