@@ -76,6 +76,15 @@ app.get('/users', async (req, res) => {
   }
 });
 
+app.get('/person', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM person');
+    res.json({ status: 'success', data: rows });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+})
+
 const PORT = process.env.API_PORT || 3000;
 app.listen(PORT, () => {
   console.log(`API Server is running on port ${PORT}`);
