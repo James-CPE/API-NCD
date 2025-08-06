@@ -76,14 +76,26 @@ app.get('/users', async (req, res) => {
   }
 });
 
+// GET /person
 app.get('/person', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM person');
+    // ดึงค่า username จาก query string ของ URL
+    const { username } = req.query;
+    let sqlQuery = 'SELECT * FROM person';
+    const params = [];
+    if (username && username.toLowerCase() !== 'admin') {
+      sqlQuery += ' WHERE username = ?';
+      params.push(username);
+    }
+
+    // Execute a Query
+    const [rows] = await pool.query(sqlQuery, params);
+
     res.json({ status: 'success', data: rows });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
   }
-})
+});
 
 const PORT = process.env.API_PORT || 3000;
 app.listen(PORT, () => {
