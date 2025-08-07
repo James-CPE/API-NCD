@@ -100,12 +100,12 @@ app.get('/person', async (req, res) => {
 // GET /hospital data
 app.get('/hospdata', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM t_hospdata');
+    const [rows] = await pool.query('SELECT hosp_name, hosp_name2, patients, previous_medication, add_medication, reduce_medication, stop_medication, remission FROM t_hospdata');
     res.json({ status: 'success', data: rows });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
   }
-}) 
+})
 
 // GET /dashboard data
 app.get('/dashboard', async (req, res) => {
