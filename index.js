@@ -4,10 +4,9 @@ const mysql = require('mysql2/promise');
 const cors = require('cors');
 
 const app = express();
-app.use(cors()); // อนุญาต Cross-Origin Requests
-app.use(express.json()); // สำหรับ Parse JSON bodies
+app.use(cors());
+app.use(express.json());
 
-// สร้าง Connection Pool ไปยัง MySQL
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -18,21 +17,18 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-// Middleware สำหรับตรวจสอบ API Key (สำคัญมาก!)
 const checkApiKey = (req, res, next) => {
   const apiKey = req.header('api-key');
 
   if (apiKey && apiKey === process.env.API_KEY) {
-    next(); // ผ่าน
+    next();
   } else {
     res.status(401).json({ error: 'Unauthorized: Invalid API Key' });
   }
 };
 
-// ใช้ Middleware นี้กับทุก Route
 app.use(checkApiKey);
 
-// --- Test Endpoint ---
 app.get('/', async (req, res) => {
     res.json({ message: 'Welcome to NCD API' });
 })
@@ -54,7 +50,7 @@ app.post('/login', async (req, res) => {
 
     if (rows.length > 0) {
       const user = rows[0];
-      delete user.password; // ลบรหัสผ่านออกจาก object ที่จะส่งกลับ
+      delete user.password;
       res.json({ status: 'success', data: user });
     } else {
       res.status(401).json({ status: 'error', message: 'Invalid username or password' });
@@ -79,7 +75,6 @@ app.get('/users', async (req, res) => {
 // GET /person
 app.get('/person', async (req, res) => {
   try {
-    // ดึงค่า username จาก query string ของ URL
     const { username } = req.query;
     let sqlQuery = 'SELECT * FROM t_person';
     const params = [];
@@ -96,6 +91,27 @@ app.get('/person', async (req, res) => {
     res.status(500).json({ status: 'error', message: err.message });
   }
 });
+
+// GET /person/:cid
+app.get('/person/:cid', async (req, res) => {
+  try {
+    const { cid } = req.params;
+
+    if (!cid) {
+      return res.status(400).json({ status: 'error', message: 'CID is required' });
+    }
+
+    const [rows] = await pool.query('SELECT * FROM t_person WHERE cid = ?', [cid]);
+
+    if (rows.length > 0) {
+      res.json({ status: 'success', data: rows });
+    } else {
+      res.status(404).json({ status: 'error', message: 'Person not found' });
+    }
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+})
 
 // GET /hospital data
 app.get('/hospdata', async (req, res) => {
