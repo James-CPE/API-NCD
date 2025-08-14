@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
+const { status } = require('express/lib/response');
 
 const app = express();
 app.use(cors());
@@ -30,7 +31,7 @@ const checkApiKey = (req, res, next) => {
 app.use(checkApiKey);
 
 app.get('/', async (req, res) => {
-    res.json({ message: 'Welcome to NCD API' });
+  res.json({ message: 'Welcome to NCD API' });
 })
 
 // --- CRUD Endpoints ---
@@ -72,8 +73,14 @@ app.get('/users', async (req, res) => {
   }
 });
 
-// GET /person
-app.get('/person', async (req, res) => {
+/**
+ * Helper function to convert checkbox values from frontend ('มี' or undefined)
+ * to a boolean (true/false) for the database.
+ */
+const toBoolean = (value) => value === 'มี';
+
+// GET /persons
+app.get('/persons', async (req, res) => {
   try {
     const { username } = req.query;
     let sqlQuery = 'SELECT * FROM t_person';
@@ -110,6 +117,91 @@ app.get('/person/:cid', async (req, res) => {
     }
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
+  }
+})
+
+// POST /persons
+app.post('persons', async (req, res) => {
+  const {
+    cid, fullname, gender, birth_day, birth_month, birth_year,
+    occupation, tel,
+    house_no, moo, village, subdistrict, district, province,
+    ht, dlp, ckd, mi, stroke, copd, asthma, disease_other, medical_his,
+    cigarette, cigarette_volume, alcohol, alcohol_volume, person_note, startdate, hospital,
+  } = req.body;
+
+  if (!cid || !fullname) {
+    return res.status(400).json({ status: 'error', message: 'CID and Fullname are required' });
+  }
+
+  const newPersonData = {
+    cid, fullname, gender, birth_day, birth_month, birth_year,
+    occupation, tel, house_no, moo, village, subdistrict, district, province,
+    ht: toBoolean(ht),
+    dlp: toBoolean(dlp),
+    ckd: toBoolean(ckd),
+    mi: toBoolean(mi),
+    stroke: toBoolean(stroke),
+    copd: toBoolean(copd),
+    asthma: toBoolean(asthma),
+    disease_other,
+    medical_his: toBoolean(medical_his),
+    cigarette, cigarette_volume, alcohol, alcohol_volume, person_note,
+    startdate, hospital,
+    created_at: new Date(),
+    updated_at: new Date(),
+  }
+
+  try {
+    const sql = 'INSERT INTO t_persons SET ?';
+    const [result] = await pool.query(sql, newPersonData);
+
+    res.status(201).json({
+      status: 'success',
+      message: 'Person created successfully',
+      data: {
+        id: result.insertId,
+        ...newPersonData
+      }
+    })
+  } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ status: 'error', message: 'This ID card already exists.' });
+    }
+    console.error('Error creating person:', error);
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+})
+
+// PUT /persons/:id
+app.put('/persons/:id', async (req, res) => {
+  const { id } = req.params;
+  const personDataToUpdate = req.body;
+
+  personDataToUpdate.updated_at = new Date();
+
+  // --- แปลงค่า checkbox ---
+  const booleanFields = ['ht', 'dlp', 'ckd', 'mi', 'stroke', 'copd', 'asthma', 'medical_his'];
+  for (const field of booleanFields) {
+    // ตรวจสอบว่ามี field นี้ส่งมาเพื่ออัปเดตหรือไม่
+    if (personDataToUpdate.hasOwnProperty(field)) {
+        personDataToUpdate[field] = toBoolean(personDataToUpdate[field]);
+    }
+  }
+
+  try {
+    const sql = 'UPDATE t_persons SET ? WHERE id = ?';
+    const [result] = await pool.query(sql, [personDataToUpdate, id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ status: 'error', message: 'Person not found' });
+    }
+
+    res.json({ status: 'success', message: 'Person updated successfully' });
+
+  } catch (error) {
+    console.error('Error updating person:', error);
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
   }
 })
 
