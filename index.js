@@ -83,8 +83,9 @@ const toBoolean = (value) => value === 'มี';
 app.get('/persons', async (req, res) => {
   try {
     const { username } = req.query;
-    let sqlQuery = 'SELECT * FROM t_person';
+    let sqlQuery = 'SELECT * FROM t_persons';
     const params = [];
+    console.log(username, params)
     if (username && username.toLowerCase() !== 'admin') {
       sqlQuery += ' WHERE username = ?';
       params.push(username);
@@ -108,7 +109,7 @@ app.get('/persons/:cid', async (req, res) => {
       return res.status(400).json({ status: 'error', message: 'CID is required' });
     }
 
-    const [rows] = await pool.query('SELECT * FROM t_person WHERE cid = ?', [cid]);
+    const [rows] = await pool.query('SELECT * FROM t_persons WHERE cid = ?', [cid]);
 
     if (rows.length > 0) {
       res.json({ status: 'success', data: rows });
@@ -120,19 +121,20 @@ app.get('/persons/:cid', async (req, res) => {
   }
 })
 
-// GET /persons/:hospital
-app.get('/persons/:hospital', async (req, res) => {
+// GET /personshos
+app.get('/personshos', async (req, res) => {
   try {
-    const { hospital } = req.params;
-
-    if (!hospital) {
-      return res.status(400).json({ status: 'error', message: 'Hospital is required' });
+    const { hospital } = req.query;
+    let sqlQuery = 'SELECT * FROM t_persons';
+    const params = [];
+    if (hospital && hospital.toLowerCase() !== 'admin') {
+      sqlQuery += ' WHERE hospital = ?';
+      params.push(hospital);
     }
 
-    const [rows] = await pool.query('SELECT * FROM t_person WHERE hospital = ?', [hospital]);
-    if (rows.length === 0) {
-      return res.status(404).json({ status: 'error', message: 'No persons found for this hospital' });
-    }
+    // Execute a Query
+    const [rows] = await pool.query(sqlQuery, params);
+
     res.json({ status: 'success', data: rows });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
