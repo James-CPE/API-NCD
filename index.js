@@ -121,7 +121,7 @@ app.get('/person/:cid', async (req, res) => {
 })
 
 // POST /persons
-app.post('persons', async (req, res) => {
+app.post('/persons', async (req, res) => {
   const {
     cid, fullname, gender, birth_day, birth_month, birth_year,
     occupation, tel,
