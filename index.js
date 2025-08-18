@@ -99,8 +99,8 @@ app.get('/persons', async (req, res) => {
   }
 });
 
-// GET /person/:cid
-app.get('/person/:cid', async (req, res) => {
+// GET /personss/:cid
+app.get('/persons/:cid', async (req, res) => {
   try {
     const { cid } = req.params;
 
@@ -119,6 +119,25 @@ app.get('/person/:cid', async (req, res) => {
     res.status(500).json({ status: 'error', message: err.message });
   }
 })
+
+// GET /persons/:hospital
+app.get('/persons/:hospital', async (req, res) => {
+  try {
+    const { hospital } = req.params;
+
+    if (!hospital) {
+      return res.status(400).json({ status: 'error', message: 'Hospital is required' });
+    }
+
+    const [rows] = await pool.query('SELECT * FROM t_person WHERE hospital = ?', [hospital]);
+    if (rows.length === 0) {
+      return res.status(404).json({ status: 'error', message: 'No persons found for this hospital' });
+    }
+    res.json({ status: 'success', data: rows });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
 
 // POST /persons
 app.post('/persons', async (req, res) => {
