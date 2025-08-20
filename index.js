@@ -84,7 +84,6 @@ app.get('/persons', async (req, res) => {
     const { username } = req.query;
     let sqlQuery = 'SELECT * FROM t_persons';
     const params = [];
-    console.log(username, params)
     if (username && username.toLowerCase() !== 'admin') {
       sqlQuery += ' WHERE username = ?';
       params.push(username);
