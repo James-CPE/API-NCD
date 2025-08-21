@@ -153,31 +153,29 @@ app.post('/persons', async (req, res) => {
     return res.status(400).json({ status: 'error', message: 'CID and Fullname are required' });
   }
 
-  const newPersonData = {
-    cid, fullname, gender, birth_day, birth_month, birth_year,
-    occupation, tel, house_no, moo, village, subdistrict, district, province,
-    ht: toBoolean(ht),
-    dlp: toBoolean(dlp),
-    ckd: toBoolean(ckd),
-    mi: toBoolean(mi),
-    stroke: toBoolean(stroke),
-    copd: toBoolean(copd),
-    asthma: toBoolean(asthma),
-    disease_other,
-    medical_his: toBoolean(medical_his),
-    cigarette, cigarette_volume, alcohol, alcohol_volume, person_note,
-    startdate, hospital,
-    created_at: new Date(),
-    updated_at: new Date(),
-  }
-
   try {
+    // ตรวจสอบว่า CID มีอยู่ในฐานข้อมูลแล้วหรือไม่
+    const [existingPerson] = await pool.query('SELECT * FROM t_persons WHERE cid = ?', [cid]);
+    if (existingPerson.length > 0) {
+      return res.status(409).json({ status: 'error', message: 'เลขบัตรประชาชนนี้มีในระบบแล้ว!' });
+    }
+
+    const newPersonData = {
+      cid, fullname, gender, birth_day, birth_month, birth_year,
+      occupation, tel, house_no, moo, village, subdistrict, district, province,
+      ht, dlp, ckd, mi, stroke, copd, asthma, disease_other, medical_his,
+      cigarette, cigarette_volume, alcohol, alcohol_volume, person_note, startdate, hospital,
+      age: (new Date().getFullYear() + 543) - birth_year,
+      created_at: new Date(),
+      updated_at: new Date(),
+    }
+
     const sql = 'INSERT INTO t_persons SET ?';
     const [result] = await pool.query(sql, newPersonData);
 
     res.status(201).json({
       status: 'success',
-      message: 'Person created successfully',
+      message: 'Created successfully',
       data: {
         id: result.insertId,
         ...newPersonData
