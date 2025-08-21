@@ -194,19 +194,19 @@ app.post('/persons', async (req, res) => {
 app.put('/persons/:id', async (req, res) => {
   const { id } = req.params;
   const personDataToUpdate = req.body;
-
   personDataToUpdate.updated_at = new Date();
-
-  // --- แปลงค่า checkbox ---
-  const booleanFields = ['ht', 'dlp', 'ckd', 'mi', 'stroke', 'copd', 'asthma', 'medical_his'];
-  for (const field of booleanFields) {
-    // ตรวจสอบว่ามี field นี้ส่งมาเพื่ออัปเดตหรือไม่
-    if (personDataToUpdate.hasOwnProperty(field)) {
-        personDataToUpdate[field] = toBoolean(personDataToUpdate[field]);
-    }
+  personDataToUpdate.age = (new Date().getFullYear() + 543) - personDataToUpdate.birth_year;
+  if (!personDataToUpdate.cid || !personDataToUpdate.fullname) {
+    return res.status(400).json({ status: 'error', message: 'CID and Fullname are required' });
   }
 
   try {
+    // ตรวจสอบว่า CID มีอยู่ในฐานข้อมูลแล้วหรือไม่
+    const [existingPerson] = await pool.query('SELECT * FROM t_persons WHERE cid = ?', [personDataToUpdate.cid]);
+    if (existingPerson.length > 0) {
+      return res.status(409).json({ status: 'error', message: 'เลขบัตรประชาชนนี้มีในระบบแล้ว!' });
+    }
+
     const sql = 'UPDATE t_persons SET ? WHERE id = ?';
     const [result] = await pool.query(sql, [personDataToUpdate, id]);
 
