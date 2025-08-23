@@ -222,6 +222,27 @@ app.put('/persons/:id', async (req, res) => {
   }
 })
 
+// DELETE /api/persons/:id
+app.delete('/persons/:id', async (req, res) => {
+  const { id } = req.params; // ดึง ID ของผู้ป่วยที่จะลบจาก URL
+
+  try {
+    const sql = 'DELETE FROM t_persons WHERE id = ?';
+    const [result] = await pool.query(sql, [id]);
+
+    if (result.affectedRows === 0) {
+      // ถ้าไม่เจอ ID ที่ต้องการลบ
+      return res.status(404).json({ status: 'error', message: 'Person not found' });
+    }
+
+    res.json({ status: 'success', message: 'Person deleted successfully' });
+
+  } catch (error) {
+    console.error('Error deleting person:', error);
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
 // GET /hospital data
 app.get('/hospdata', async (req, res) => {
   try {
