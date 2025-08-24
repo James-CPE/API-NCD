@@ -85,7 +85,7 @@ app.get('/persons', async (req, res) => {
     let sqlQuery = 'SELECT * FROM t_persons';
     const params = [];
     if (username && username.toLowerCase() !== 'admin') {
-      sqlQuery += ' WHERE username = ?';
+      sqlQuery += ' WHERE hospital = ?';
       params.push(username);
     }
 
@@ -241,6 +241,93 @@ app.delete('/persons/:id', async (req, res) => {
     console.error('Error deleting person:', error);
     res.status(500).json({ status: 'error', message: 'Internal server error' });
   }
+});
+
+// ===============================================
+// Visit Endpoints
+// ===============================================
+
+// GET all visits for a specific person by CID
+app.get('/persons/:cid/visits', async (req, res) => {
+  try {
+    const { cid } = req.params;
+    const [rows] = await pool.query(
+      // เปลี่ยนชื่อคอลัมน์ status เป็น visit_status ชั่วคราวเพื่อให้ Frontend ทำงานได้ง่าย
+      'SELECT *, status as visit_status FROM t_visits WHERE person_cid = ? ORDER BY visit_date ASC',
+      [cid]
+    );
+    res.json({ status: 'success', data: rows });
+  } catch (err) {
+    console.error('Error fetching visits:', err);
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
+// POST a new visit
+app.post('/visits', async (req, res) => {
+  try {
+    const visitData = req.body;
+    // คำนวณ BMI ถ้ามี weight และ height
+    if (visitData.weight && visitData.height) {
+        const heightInMeters = visitData.height / 100;
+        visitData.bmi = (visitData.weight / (heightInMeters * heightInMeters)).toFixed(2);
+    }
+    // เปลี่ยนชื่อ visit_status กลับเป็น status ก่อนลง DB
+    // visitData.status = visitData.visit_status;
+    // delete visitData.visit_status; // ลบ key ที่ไม่ต้องการออก
+
+    const sql = 'INSERT INTO t_visits SET ?';
+    const [result] = await pool.query(sql, [visitData]);
+    res.status(201).json({ status: 'success', message: 'Visit created successfully', data: { id: result.insertId, ...visitData } });
+  } catch (err) {
+    console.error('Error creating visit:', err);
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
+// PUT (update) an existing visit by ID
+app.put('/visits/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const visitData = req.body;
+
+        // คำนวณ BMI อีกครั้งเผื่อมีการแก้ไข
+        if (visitData.weight && visitData.height) {
+            const heightInMeters = visitData.height / 100;
+            visitData.bmi = (visitData.weight / (heightInMeters * heightInMeters)).toFixed(2);
+        }
+        // เปลี่ยนชื่อ visit_status กลับเป็น status ก่อนลง DB
+        visitData.status = visitData.visit_status;
+        delete visitData.visit_status;
+
+        const sql = 'UPDATE t_visits SET ? WHERE id = ?';
+        const [result] = await pool.query(sql, [visitData, id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ status: 'error', message: 'Visit not found' });
+        }
+        res.json({ status: 'success', message: 'Visit updated successfully' });
+    } catch (err) {
+        console.error('Error updating visit:', err);
+        res.status(500).json({ status: 'error', message: 'Internal server error' });
+    }
+});
+
+
+// DELETE a visit by ID
+app.delete('/visits/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [result] = await pool.query('DELETE FROM t_visits WHERE id = ?', [id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ status: 'error', message: 'Visit not found' });
+        }
+        res.json({ status: 'success', message: 'Visit deleted successfully' });
+    } catch (err) {
+        console.error('Error deleting visit:', err);
+        res.status(500).json({ status: 'error', message: 'Internal server error' });
+    }
 });
 
 // GET /hospital data
