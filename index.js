@@ -425,11 +425,24 @@ app.delete("/visits/:id", async (req, res) => {
 // GET /hospital data
 app.get("/hospdata", async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      "SELECT hosp_name, hosp_name2, patients, previous_medication, add_medication, reduce_medication, stop_medication, remission FROM t_hospdata"
-    );
+    const sqlQuery = `
+      SELECT
+        hospital,
+        SUM(status = 'ยาเดิม') AS old_med,
+        SUM(status = 'เพิ่มยา') AS add_med,
+        SUM(status = 'ลดยา') AS reduce_med,
+        SUM(status = 'หยุดยา') AS stop_med,
+        SUM(status = 'Remission') AS remission,
+        SUM(status = 'ผู้ป่วย DM ที่ไม่ได้รับยา') AS dm_no_med,
+        SUM(status IS NULL) AS under_follow_up,
+        COUNT(*) AS total_patients
+      FROM t_persons
+      GROUP BY hospital
+    `;
+    const [rows] = await pool.query(sqlQuery);
     res.json({ status: "success", data: rows });
   } catch (err) {
+    console.error("Error fetching hospital data:", err);
     res.status(500).json({ status: "error", message: err.message });
   }
 });
