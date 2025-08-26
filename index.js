@@ -331,6 +331,7 @@ app.get("/persons/:cid/visits", async (req, res) => {
     const [rows] = await pool.query(
       // เปลี่ยนชื่อคอลัมน์ status เป็น visit_status ชั่วคราวเพื่อให้ Frontend ทำงานได้ง่าย
       `SELECT *,
+              t_visits.id as t_id,
               t_visits.status as visit_status,
               2hrpp as hrpp,
               gender
