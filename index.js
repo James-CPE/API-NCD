@@ -330,7 +330,15 @@ app.get("/persons/:cid/visits", async (req, res) => {
     const { cid } = req.params;
     const [rows] = await pool.query(
       // เปลี่ยนชื่อคอลัมน์ status เป็น visit_status ชั่วคราวเพื่อให้ Frontend ทำงานได้ง่าย
-      "SELECT *, status as visit_status FROM t_visits WHERE person_cid = ? ORDER BY visit_date ASC",
+      `SELECT *,
+              t_visits.status as visit_status,
+              2hrpp as hrpp,
+              gender
+        FROM t_visits
+        LEFT JOIN t_persons
+        ON t_visits.person_cid = t_persons.cid
+        WHERE person_cid = ?
+        ORDER BY visit_date ASC`,
       [cid]
     );
     res.json({ status: "success", data: rows });
