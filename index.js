@@ -276,11 +276,11 @@ app.put("/persons/:id", async (req, res) => {
       "SELECT * FROM t_persons WHERE cid = ?",
       [personDataToUpdate.cid]
     );
-    if (existingPerson.length > 0) {
-      return res
-        .status(409)
-        .json({ status: "error", message: "เลขบัตรประชาชนนี้มีในระบบแล้ว!" });
-    }
+    // if (existingPerson.length > 0) {
+    //   return res
+    //     .status(409)
+    //     .json({ status: "error", message: "เลขบัตรประชาชนนี้มีในระบบแล้ว!" });
+    // }
 
     const sql = "UPDATE t_persons SET ? WHERE id = ?";
     const [result] = await pool.query(sql, [personDataToUpdate, id]);
