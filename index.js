@@ -443,7 +443,7 @@ app.get("/hospdata", async (req, res) => {
         SUM(status = 'หยุดยา') AS stop_med,
         SUM(status = 'Remission') AS remission,
         SUM(status = 'ผู้ป่วย DM ที่ไม่ได้รับยา') AS dm_no_med,
-        SUM(status IS NULL) AS under_follow_up,
+        SUM(status IS NULL OR status = "อยู่ระหว่างติดตาม") AS under_follow_up,
         COUNT(*) AS total_patients
       FROM t_persons
       GROUP BY hospital
@@ -469,7 +469,7 @@ app.get("/dashboard", async (req, res) => {
         SUM(status = 'หยุดยา') AS stop_med,
         SUM(status = 'Remission') AS remission,
         SUM(status = 'ผู้ป่วย DM ที่ไม่ได้รับยา') AS dm_no_med,
-        SUM(status IS NULL) AS under_follow_up
+        SUM(status IS NULL OR status = "อยู่ระหว่างติดตาม") AS under_follow_up
       FROM t_persons
     `);
     res.json({ status: "success", data: rows[0] });
