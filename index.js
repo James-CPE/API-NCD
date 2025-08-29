@@ -178,6 +178,7 @@ app.post("/persons", async (req, res) => {
     alcohol_volume,
     person_note,
     startdate,
+    status,
     hospital,
   } = req.body;
 
@@ -193,6 +194,7 @@ app.post("/persons", async (req, res) => {
       "SELECT * FROM t_persons WHERE cid = ?",
       [cid]
     );
+
     if (existingPerson.length > 0) {
       return res
         .status(409)
@@ -229,6 +231,7 @@ app.post("/persons", async (req, res) => {
       alcohol_volume,
       person_note,
       startdate,
+      status: status || "อยู่ระหว่างติดตาม",
       hospital,
       age: new Date().getFullYear() + 543 - birth_year,
       created_at: new Date(),
