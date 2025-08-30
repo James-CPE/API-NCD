@@ -75,12 +75,6 @@ app.get("/users", async (req, res) => {
   }
 });
 
-/**
- * Helper function to convert checkbox values from frontend ('มี' or undefined)
- * to a boolean (true/false) for the database.
- */
-const toBoolean = (value) => value === "มี";
-
 // GET /persons
 app.get("/persons", async (req, res) => {
   try {
@@ -356,6 +350,7 @@ app.get("/persons/:cid/visits", async (req, res) => {
 app.post("/visits", async (req, res) => {
   try {
     const visitData = req.body;
+
     // คำนวณ BMI ถ้ามี weight และ height
     if (visitData.weight && visitData.height) {
       const heightInMeters = visitData.height / 100;
@@ -364,16 +359,19 @@ app.post("/visits", async (req, res) => {
         (heightInMeters * heightInMeters)
       ).toFixed(2);
     }
-    // เปลี่ยนชื่อ visit_status กลับเป็น status ก่อนลง DB
-    // visitData.status = visitData.visit_status;
-    // delete visitData.visit_status; // ลบ key ที่ไม่ต้องการออก
 
     const sql = "INSERT INTO t_visits SET ?";
-    const [result] = await pool.query(sql, [visitData]);
+    const [visitResult] = await pool.query(sql, [visitData]);
+
+    if (visitData.person_cid && visitData.status) {
+      const personSql = "UPDATE t_persons SET status = ? WHERE cid = ?";
+      await pool.query(personSql, [visitData.status, visitData.person_cid])
+    }
+
     res.status(201).json({
       status: "success",
       message: "Visit created successfully",
-      data: { id: result.insertId, ...visitData },
+      data: { id: visitResult.insertId, ...visitData },
     });
   } catch (err) {
     console.error("Error creating visit:", err);
