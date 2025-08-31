@@ -326,7 +326,6 @@ app.get("/persons/:cid/visits", async (req, res) => {
   try {
     const { cid } = req.params;
     const [rows] = await pool.query(
-      // เปลี่ยนชื่อคอลัมน์ status เป็น visit_status ชั่วคราวเพื่อให้ Frontend ทำงานได้ง่าย
       `SELECT *,
               t_visits.id as t_id,
               t_visits.status as visit_status,
@@ -394,8 +393,8 @@ app.put("/visits/:id", async (req, res) => {
       ).toFixed(2);
     }
     // เปลี่ยนชื่อ visit_status กลับเป็น status ก่อนลง DB
-    visitData.status = visitData.visit_status;
-    delete visitData.visit_status;
+    // visitData.status = visitData.visit_status;
+    // delete visitData.visit_status;
 
     const sql = "UPDATE t_visits SET ? WHERE id = ?";
     const [result] = await pool.query(sql, [visitData, id]);
