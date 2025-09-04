@@ -484,6 +484,68 @@ app.get("/dashboard", async (req, res) => {
   }
 });
 
+// Get /fetch latest med
+app.get("/fetchMed/:cid", async (req, res) => {
+  try {
+    const { cid } = req.params;
+
+    if (!cid) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "CID is required" });
+    }
+
+    const [rows] = await pool.query(`
+      SELECT
+        medicine1,
+        instruction1,
+        quantity1,
+        medicine2,
+        instruction2,
+        quantity2,
+        medicine3,
+        instruction3,
+        quantity3,
+        medicine4,
+        instruction4,
+        quantity4,
+        medicine5,
+        instruction5,
+        quantity5
+      FROM t_visits
+      WHERE person_cid = ?
+        AND (
+          (medicine1 IS NOT NULL AND medicine1 <> '')
+          OR (instruction1 IS NOT NULL AND instruction1 <> '')
+          OR (quantity1 IS NOT NULL AND quantity1 <> '')
+          OR (medicine2 IS NOT NULL AND medicine2 <> '')
+          OR (instruction2 IS NOT NULL AND instruction2 <> '')
+          OR (quantity2 IS NOT NULL AND quantity2 <> '')
+          OR (medicine3 IS NOT NULL AND medicine3 <> '')
+          OR (instruction3 IS NOT NULL AND instruction3 <> '')
+          OR (quantity3 IS NOT NULL AND quantity3 <> '')
+          OR (medicine3 IS NOT NULL AND medicine4 <> '')
+          OR (instruction3 IS NOT NULL AND instruction4 <> '')
+          OR (quantity3 IS NOT NULL AND quantity4 <> '')
+          OR (medicine3 IS NOT NULL AND medicine5 <> '')
+          OR (instruction3 IS NOT NULL AND instruction5 <> '')
+          OR (quantity3 IS NOT NULL AND quantity5 <> '')
+        )
+      ORDER BY id DESC
+      LIMIT 1;
+      `, [cid]
+    );
+
+    if (rows.length > 0) {
+      res.json({ status: "success", data: rows });
+    } else {
+      res.status(404).json({ status: "error", message: "Visit not found" });
+    }
+  } catch (err) {
+    res.status(500).json({ status: "error", message: err.message });
+  }
+})
+
 const PORT = process.env.API_PORT || 3000;
 app.listen(PORT, () => {
   console.log(`API Server is running on port ${PORT}`);
