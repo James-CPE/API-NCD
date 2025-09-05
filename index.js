@@ -2,6 +2,8 @@ require("dotenv").config();
 const express = require("express");
 const mysql = require("mysql2/promise");
 const cors = require("cors");
+const bcrypt = require('bcrypt');
+const rateLimit = require('express-rate-limit');
 const app = express();
 
 const corsOptions = {
@@ -23,6 +25,15 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
+// กำหนด rate limit: ไม่เกิน 5 requests ต่อ 1 นาที ต่อ IP
+const loginLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 นาที
+  max: 5, // จำกัด 5 ครั้ง
+  message: { status: "error", message: "Too many login attempts. Please try again later." },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+})
+
 const checkApiKey = (req, res, next) => {
   const apiKey = req.header("api-key");
 
@@ -41,7 +52,7 @@ app.get("/", async (req, res) => {
 
 // --- CRUD Endpoints ---
 // POST /login
-app.post("/login", async (req, res) => {
+app.post("/login", loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -52,12 +63,20 @@ app.post("/login", async (req, res) => {
     }
 
     const [rows] = await pool.query(
-      "SELECT * FROM t_users WHERE username = ? AND password = ?",
-      [username, password]
+      "SELECT * FROM t_users WHERE username = ? LIMIT 1",
+      [username]
     );
 
-    if (rows.length > 0) {
-      const user = rows[0];
+    if (rows.length === 0) {
+      return res
+        .status(401)
+        .json({ status: "error", message: "Invalid username or password" });
+    }
+
+    const user = rows[0];
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (isMatch) {
       delete user.password;
       res.json({ status: "success", data: user });
     } else {
