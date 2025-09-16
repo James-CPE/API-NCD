@@ -7,8 +7,8 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 
 const corsOptions = {
-  // origin: process.env.DOMAIN,
-  origin: 'http://localhost:5173',
+  origin: process.env.DOMAIN,
+  //origin: 'http://localhost:5173',
   optionsSuccessStatus: 200
 }
 
